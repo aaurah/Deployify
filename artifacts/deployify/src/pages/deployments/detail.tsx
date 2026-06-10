@@ -27,10 +27,7 @@ export default function DeploymentDetail() {
     query: { 
       enabled: !!deploymentId,
       refetchInterval: (data) => {
-        // Only auto-refetch if we're in a running state
-        if (data && (data.status === 'building' || data.status === 'queued')) {
-          return 3000;
-        }
+        if (data && (data.status === "building" || data.status === "queued")) return 3000;
         return false;
       }
     } 
@@ -39,7 +36,7 @@ export default function DeploymentDetail() {
   const { data: logs, isLoading: logsLoading } = useGetDeploymentLogs(deploymentId, { 
     query: { 
       enabled: !!deploymentId,
-      refetchInterval: deployment?.status === 'building' ? 3000 : false
+      refetchInterval: deployment?.status === "building" ? 3000 : false
     } 
   });
 
@@ -51,7 +48,7 @@ export default function DeploymentDetail() {
   }, [logs]);
 
   if (deploymentLoading) {
-    return <div className="p-8 text-center"><div className="animate-pulse h-8 w-32 bg-muted mx-auto rounded"></div></div>;
+    return <div className="p-8 text-center"><div className="animate-pulse h-8 w-32 bg-muted mx-auto rounded" /></div>;
   }
 
   if (!deployment) {
@@ -71,71 +68,89 @@ export default function DeploymentDetail() {
   };
 
   const getLogColor = (level: string) => {
-    switch(level) {
-      case DeploymentLogLevel.error: return "text-red-400";
-      case DeploymentLogLevel.warn: return "text-amber-400";
-      default: return "text-muted-foreground";
-    }
+    if (level === "error") return "text-red-400";
+    if (level === "warn") return "text-amber-400";
+    return "text-muted-foreground";
   };
 
-  const isBuilding = deployment.status === 'building' || deployment.status === 'queued';
-  const isReady = deployment.status === 'ready';
+  const isBuilding = deployment.status === "building" || deployment.status === "queued";
+  const isReady = deployment.status === "ready";
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex items-start gap-3">
         <Link href={`/projects/${projectId}`}>
-          <Button variant="outline" size="icon">
+          <Button variant="outline" size="icon" className="shrink-0 mt-1">
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight">
-              Deployment {deployment.commitSha ? deployment.commitSha.substring(0, 7) : `#${deployment.id}`}
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-lg md:text-2xl font-bold tracking-tight">
+              {deployment.commitSha ? deployment.commitSha.substring(0, 7) : `#${deployment.id}`}
             </h1>
             <StatusBadge status={deployment.status} />
           </div>
-          <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-            <span className="bg-secondary/50 px-2 py-0.5 rounded text-xs">{deployment.environment}</span>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-xs text-muted-foreground">
+            <span className="bg-secondary/50 px-1.5 py-0.5 rounded">{deployment.environment}</span>
             <span>•</span>
-            <span>{deployment.branch}</span>
-            <span>•</span>
-            <span>{format(new Date(deployment.createdAt), "MMM d, yyyy HH:mm:ss")}</span>
+            <span className="font-mono">{deployment.branch}</span>
+            <span className="hidden sm:inline">•</span>
+            <span className="hidden sm:inline">{format(new Date(deployment.createdAt), "MMM d, yyyy HH:mm")}</span>
           </div>
         </div>
-        
-        <div className="flex items-center gap-2">
+
+        {/* Action buttons */}
+        <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
           {isBuilding && (
-            <Button variant="destructive" onClick={handleCancel} disabled={cancelDeployment.isPending} className="gap-2">
-              <Ban className="h-4 w-4" />
-              Cancel
+            <Button variant="destructive" size="sm" onClick={handleCancel} disabled={cancelDeployment.isPending} className="gap-1.5">
+              <Ban className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Cancel</span>
             </Button>
           )}
-          
-          {isReady && deployment.environment !== 'production' && (
-            <Button onClick={handlePromote} disabled={promoteDeployment.isPending} className="gap-2 bg-indigo-600 hover:bg-indigo-700">
-              <UploadCloud className="h-4 w-4" />
-              Promote to Production
+          {isReady && deployment.environment !== "production" && (
+            <Button size="sm" onClick={handlePromote} disabled={promoteDeployment.isPending} className="gap-1.5 bg-indigo-600 hover:bg-indigo-700">
+              <UploadCloud className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Promote</span>
             </Button>
           )}
-          
           {deployment.deployUrl && (
             <a href={deployment.deployUrl} target="_blank" rel="noreferrer">
-              <Button variant="outline" className="gap-2">
-                <ExternalLink className="h-4 w-4" />
-                Visit URL
+              <Button variant="outline" size="sm" className="gap-1.5">
+                <ExternalLink className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Visit</span>
               </Button>
             </a>
           )}
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        <div className="md:col-span-2 space-y-6">
-          <Card className="bg-[#0D0D12] border-border/40 shadow-xl overflow-hidden flex flex-col h-[600px]">
-            <CardHeader className="bg-card/50 border-b border-border/30 py-3 px-4 flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-sm font-mono flex items-center gap-2 text-muted-foreground">
+      {/* Details card (mobile-first: on top) */}
+      <Card className="bg-card/50 border-border/50 md:hidden">
+        <CardContent className="pt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+          {[
+            ["Status", <span className="capitalize">{deployment.status}</span>],
+            ["Environment", <span className="capitalize">{deployment.environment}</span>],
+            ["Branch", <span className="font-mono">{deployment.branch}</span>],
+            ["Commit", <span className="font-mono">{deployment.commitSha?.substring(0, 7) || "Manual"}</span>],
+            ["Duration", deployment.buildDurationMs ? `${(deployment.buildDurationMs / 1000).toFixed(1)}s` : "—"],
+          ].map(([label, val], i) => (
+            <div key={i}>
+              <div className="text-muted-foreground text-xs">{label as string}</div>
+              <div className="font-medium mt-0.5">{val as React.ReactNode}</div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* Main grid */}
+      <div className="grid gap-5 md:grid-cols-3">
+        {/* Build logs */}
+        <div className="md:col-span-2">
+          <Card className="bg-[#0D0D12] border-border/40 shadow-xl overflow-hidden flex flex-col h-[320px] md:h-[600px]">
+            <CardHeader className="bg-card/50 border-b border-border/30 py-2.5 px-4 flex flex-row items-center justify-between space-y-0">
+              <CardTitle className="text-xs font-mono flex items-center gap-2 text-muted-foreground">
                 <Terminal className="h-4 w-4" />
                 Build Logs
               </CardTitle>
@@ -146,15 +161,15 @@ export default function DeploymentDetail() {
                 </div>
               )}
             </CardHeader>
-            <CardContent className="flex-1 overflow-auto p-4 font-mono text-sm leading-relaxed">
+            <CardContent className="flex-1 overflow-auto p-3 md:p-4 font-mono text-xs md:text-sm leading-relaxed">
               {logsLoading && !logs?.length ? (
                 <div className="text-muted-foreground animate-pulse">Initializing build environment...</div>
               ) : (
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                   {logs?.map((log) => (
-                    <div key={log.id} className="flex gap-4 hover:bg-white/5 px-2 py-0.5 rounded transition-colors -mx-2">
-                      <span className="text-muted-foreground/50 shrink-0 select-none">
-                        {format(new Date(log.timestamp), "HH:mm:ss.SSS")}
+                    <div key={log.id} className="flex gap-2 md:gap-4 hover:bg-white/5 px-2 py-0.5 rounded -mx-2">
+                      <span className="text-muted-foreground/50 shrink-0 select-none text-xs">
+                        {format(new Date(log.timestamp), "HH:mm:ss")}
                       </span>
                       <span className={`${getLogColor(log.level)} break-all`}>
                         {log.message}
@@ -168,52 +183,58 @@ export default function DeploymentDetail() {
           </Card>
         </div>
 
-        <div className="space-y-6">
+        {/* Details sidebar (desktop only) */}
+        <div className="hidden md:block space-y-5">
           <Card className="bg-card/50 border-border/50">
             <CardHeader>
-              <CardTitle className="text-lg">Details</CardTitle>
+              <CardTitle className="text-base">Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-sm">
-              <div className="grid grid-cols-2 gap-1 border-b border-border/30 pb-3">
-                <div className="text-muted-foreground">Status</div>
-                <div className="font-medium capitalize">{deployment.status}</div>
-              </div>
-              <div className="grid grid-cols-2 gap-1 border-b border-border/30 pb-3">
-                <div className="text-muted-foreground">Environment</div>
-                <div className="font-medium capitalize">{deployment.environment}</div>
-              </div>
-              <div className="grid grid-cols-2 gap-1 border-b border-border/30 pb-3">
-                <div className="text-muted-foreground">Branch</div>
-                <div className="font-medium font-mono">{deployment.branch}</div>
-              </div>
-              <div className="grid grid-cols-2 gap-1 border-b border-border/30 pb-3">
-                <div className="text-muted-foreground">Commit</div>
-                <div className="font-medium font-mono">{deployment.commitSha?.substring(0, 7) || "Manual trigger"}</div>
-              </div>
-              <div className="grid grid-cols-2 gap-1 border-b border-border/30 pb-3">
-                <div className="text-muted-foreground">Duration</div>
-                <div className="font-medium">
-                  {deployment.buildDurationMs ? `${(deployment.buildDurationMs / 1000).toFixed(1)}s` : "—"}
+              {[
+                ["Status", <span className="capitalize">{deployment.status}</span>],
+                ["Environment", <span className="capitalize">{deployment.environment}</span>],
+                ["Branch", <span className="font-mono">{deployment.branch}</span>],
+                ["Commit", <span className="font-mono">{deployment.commitSha?.substring(0, 7) || "Manual trigger"}</span>],
+                ["Duration", deployment.buildDurationMs ? `${(deployment.buildDurationMs / 1000).toFixed(1)}s` : "—"],
+              ].map(([label, val], i) => (
+                <div key={i} className="grid grid-cols-2 gap-1 border-b border-border/30 pb-3 last:border-0 last:pb-0">
+                  <div className="text-muted-foreground">{label as string}</div>
+                  <div className="font-medium">{val as React.ReactNode}</div>
                 </div>
-              </div>
+              ))}
             </CardContent>
           </Card>
-          
+
           {deployment.errorMessage && (
             <Card className="border-red-500/30 bg-red-500/5">
               <CardHeader>
-                <CardTitle className="text-red-400 text-lg flex items-center gap-2">
-                  <Ban className="h-5 w-5" />
-                  Error Details
+                <CardTitle className="text-red-400 text-base flex items-center gap-2">
+                  <Ban className="h-4 w-4" />
+                  Error
                 </CardTitle>
               </CardHeader>
-              <CardContent className="font-mono text-sm text-red-300 whitespace-pre-wrap">
+              <CardContent className="font-mono text-sm text-red-300 whitespace-pre-wrap break-all">
                 {deployment.errorMessage}
               </CardContent>
             </Card>
           )}
         </div>
       </div>
+
+      {/* Error card on mobile */}
+      {deployment.errorMessage && (
+        <Card className="border-red-500/30 bg-red-500/5 md:hidden">
+          <CardHeader>
+            <CardTitle className="text-red-400 text-sm flex items-center gap-2">
+              <Ban className="h-4 w-4" />
+              Error
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="font-mono text-xs text-red-300 whitespace-pre-wrap break-all">
+            {deployment.errorMessage}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

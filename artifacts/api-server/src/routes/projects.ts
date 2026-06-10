@@ -24,12 +24,12 @@ function formatProject(p: typeof projectsTable.$inferSelect) {
   };
 }
 
-router.get("/", async (_req, res) => {
+router.get("/projects", async (_req, res) => {
   const projects = await db.select().from(projectsTable).orderBy(desc(projectsTable.createdAt));
   res.json(projects.map(formatProject));
 });
 
-router.post("/", async (req, res) => {
+router.post("/projects", async (req, res) => {
   const body = CreateProjectBody.parse(req.body);
   const slug = slugify(body.name);
   const productionUrl = `https://${slug}.deployify.app`;
@@ -40,14 +40,14 @@ router.post("/", async (req, res) => {
   res.status(201).json(formatProject(project));
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/projects/:id", async (req, res) => {
   const { id } = GetProjectParams.parse({ id: Number(req.params.id) });
   const [project] = await db.select().from(projectsTable).where(eq(projectsTable.id, id));
   if (!project) return res.status(404).json({ error: "Project not found" });
   res.json(formatProject(project));
 });
 
-router.patch("/:id", async (req, res) => {
+router.patch("/projects/:id", async (req, res) => {
   const { id } = UpdateProjectParams.parse({ id: Number(req.params.id) });
   const body = UpdateProjectBody.parse(req.body);
   const [project] = await db
@@ -59,7 +59,7 @@ router.patch("/:id", async (req, res) => {
   res.json(formatProject(project));
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/projects/:id", async (req, res) => {
   const { id } = DeleteProjectParams.parse({ id: Number(req.params.id) });
   await db.delete(projectsTable).where(eq(projectsTable.id, id));
   res.status(204).send();
