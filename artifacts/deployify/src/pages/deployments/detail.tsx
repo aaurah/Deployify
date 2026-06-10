@@ -4,15 +4,28 @@ import {
   useGetDeploymentLogs,
   useCancelDeployment,
   usePromoteDeployment,
-  getGetDeploymentQueryKey
+  useDeleteDeployment,
+  getGetDeploymentQueryKey,
+  getListDeploymentsQueryKey
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Ban, ExternalLink, RefreshCw, Terminal, UploadCloud } from "lucide-react";
+import { ArrowLeft, Ban, ExternalLink, RefreshCw, Terminal, UploadCloud, Trash2 } from "lucide-react";
 import { format } from "date-fns";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 type DeploymentLogLevel = "info" | "warn" | "error";
 
 export default function DeploymentDetail() {
@@ -42,6 +55,8 @@ export default function DeploymentDetail() {
 
   const cancelDeployment = useCancelDeployment();
   const promoteDeployment = usePromoteDeployment();
+  const deleteDeployment = useDeleteDeployment();
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   useEffect(() => {
     logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -64,6 +79,15 @@ export default function DeploymentDetail() {
   const handlePromote = () => {
     promoteDeployment.mutate({ id: deploymentId }, {
       onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetDeploymentQueryKey(deploymentId) })
+    });
+  };
+
+  const handleDelete = () => {
+    deleteDeployment.mutate({ id: deploymentId }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListDeploymentsQueryKey(projectId) });
+        window.history.back();
+      }
     });
   };
 
@@ -123,6 +147,32 @@ export default function DeploymentDetail() {
               </Button>
             </a>
           )}
+          <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1.5 border-red-800/50 text-red-400 hover:bg-red-500/10 hover:text-red-300">
+                <Trash2 className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Delete</span>
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete deployment?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete deployment <strong>{deployment.commitSha?.substring(0, 7) ?? `#${deployment.id}`}</strong> and all its build logs. This cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  disabled={deleteDeployment.isPending}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  {deleteDeployment.isPending ? "Deleting…" : "Delete deployment"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 

@@ -300,3 +300,149 @@ export interface ProjectAnalytics {
   deploymentsPerDay: ProjectAnalyticsDeploymentsPerDayItem[];
 }
 
+export interface AdminStats {
+  totalUsers: number;
+  activeUsers: number;
+  totalProjects: number;
+  totalDeployments: number;
+  totalDomains: number;
+  successRate: number;
+  avgBuildDurationMs: number;
+  deploymentsToday: number;
+  buildMinutesUsed: number;
+  storageUsedGb: number;
+}
+
+export type AdminUserRole = typeof AdminUserRole[keyof typeof AdminUserRole];
+
+
+export const AdminUserRole = {
+  admin: 'admin',
+  member: 'member',
+  viewer: 'viewer',
+} as const;
+
+export type AdminUserStatus = typeof AdminUserStatus[keyof typeof AdminUserStatus];
+
+
+export const AdminUserStatus = {
+  active: 'active',
+  suspended: 'suspended',
+  pending: 'pending',
+} as const;
+
+export interface AdminUser {
+  id: number;
+  name: string;
+  email: string;
+  role: AdminUserRole;
+  status: AdminUserStatus;
+  /** @nullable */
+  avatarUrl?: string | null;
+  twoFactorEnabled: boolean;
+  /** @nullable */
+  lastLoginAt?: string | null;
+  createdAt: string;
+}
+
+export type AdminUserInputRole = typeof AdminUserInputRole[keyof typeof AdminUserInputRole];
+
+
+export const AdminUserInputRole = {
+  admin: 'admin',
+  member: 'member',
+  viewer: 'viewer',
+} as const;
+
+export interface AdminUserInput {
+  name: string;
+  email: string;
+  role?: AdminUserInputRole;
+}
+
+export type AdminUserUpdateRole = typeof AdminUserUpdateRole[keyof typeof AdminUserUpdateRole];
+
+
+export const AdminUserUpdateRole = {
+  admin: 'admin',
+  member: 'member',
+  viewer: 'viewer',
+} as const;
+
+export type AdminUserUpdateStatus = typeof AdminUserUpdateStatus[keyof typeof AdminUserUpdateStatus];
+
+
+export const AdminUserUpdateStatus = {
+  active: 'active',
+  suspended: 'suspended',
+  pending: 'pending',
+} as const;
+
+export interface AdminUserUpdate {
+  name?: string;
+  role?: AdminUserUpdateRole;
+  status?: AdminUserUpdateStatus;
+}
+
+export interface AdminProject {
+  id: number;
+  name: string;
+  slug: string;
+  framework: string;
+  status: string;
+  deploymentCount: number;
+  /** @nullable */
+  productionUrl?: string | null;
+  createdAt: string;
+}
+
+export interface AdminDeployment {
+  id: number;
+  projectId: number;
+  projectName: string;
+  status: string;
+  environment: string;
+  branch: string;
+  /** @nullable */
+  commitSha?: string | null;
+  /** @nullable */
+  commitMessage?: string | null;
+  /** @nullable */
+  buildDurationMs?: number | null;
+  createdAt: string;
+}
+
+export interface AuditLog {
+  id: number;
+  /** @nullable */
+  userId?: number | null;
+  /** @nullable */
+  userEmail?: string | null;
+  action: string;
+  resource: string;
+  /** @nullable */
+  resourceId?: string | null;
+  /** @nullable */
+  details?: string | null;
+  /** @nullable */
+  ipAddress?: string | null;
+  createdAt: string;
+}
+
+export interface SystemSetting {
+  key: string;
+  value: string;
+  /** @nullable */
+  description?: string | null;
+  updatedAt: string;
+}
+
+export type SystemSettingsUpdateSettingsItem = {
+  key: string;
+  value: string;
+};
+
+export interface SystemSettingsUpdate {
+  settings: SystemSettingsUpdateSettingsItem[];
+}
+

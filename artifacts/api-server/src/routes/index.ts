@@ -5,6 +5,7 @@ import deploymentsRouter from "./deployments";
 import domainsRouter from "./domains";
 import envVarsRouter from "./envvars";
 import dashboardRouter from "./dashboard";
+import adminRouter from "./admin";
 
 const router: IRouter = Router();
 
@@ -14,5 +15,6 @@ router.use(deploymentsRouter);
 router.use(domainsRouter);
 router.use(envVarsRouter);
 router.use(dashboardRouter);
+router.use(adminRouter);
 
 export default router;

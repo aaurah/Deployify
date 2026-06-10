@@ -7,6 +7,7 @@ import {
   useListEnvVars,
   useCreateEnvVar,
   useDeleteEnvVar,
+  useDeleteDeployment,
   getListDeploymentsQueryKey,
   getListEnvVarsQueryKey
 } from "@workspace/api-client-react";
@@ -15,7 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Play, Github, ExternalLink, Activity, Plus, Key, Eye, EyeOff, Trash } from "lucide-react";
+import { ArrowLeft, Play, Github, ExternalLink, Activity, Plus, Key, Eye, EyeOff, Trash, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,16 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 type DeploymentInputEnvironment = "production" | "preview" | "development";
 type EnvVarInputEnvironment = "production" | "preview" | "development" | "all";
 
@@ -40,6 +51,7 @@ export default function ProjectDetail() {
   const createDeployment = useCreateDeployment();
   const createEnvVar = useCreateEnvVar();
   const deleteEnvVar = useDeleteEnvVar();
+  const deleteDeployment = useDeleteDeployment();
 
   const [deployEnv, setDeployEnv] = useState<DeploymentInputEnvironment>("preview");
   const [deployBranch, setDeployBranch] = useState("main");
@@ -241,32 +253,67 @@ export default function ProjectDetail() {
               ) : deployments && deployments.length > 0 ? (
                 <div className="space-y-2">
                   {deployments.map((deployment) => (
-                    <Link key={deployment.id} href={`/projects/${projectId}/deployments/${deployment.id}`}>
-                      <div className="flex items-center justify-between p-3 md:p-4 rounded-lg border border-border/40 bg-card/30 hover:bg-card/60 hover:border-border transition-all cursor-pointer group gap-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <StatusBadge status={deployment.status} />
-                          <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              <span className="font-mono text-xs md:text-sm">
-                                {deployment.commitSha ? deployment.commitSha.substring(0, 7) : "Manual"}
-                              </span>
-                              <span className="text-xs text-muted-foreground">{deployment.branch}</span>
+                    <div key={deployment.id} className="flex items-center gap-2">
+                      <Link href={`/projects/${projectId}/deployments/${deployment.id}`} className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between p-3 md:p-4 rounded-lg border border-border/40 bg-card/30 hover:bg-card/60 hover:border-border transition-all cursor-pointer group gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <StatusBadge status={deployment.status} />
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <span className="font-mono text-xs md:text-sm">
+                                  {deployment.commitSha ? deployment.commitSha.substring(0, 7) : "Manual"}
+                                </span>
+                                <span className="text-xs text-muted-foreground">{deployment.branch}</span>
+                              </div>
+                              <div className="text-xs text-muted-foreground mt-0.5 truncate max-w-[160px] md:max-w-none">
+                                {deployment.commitMessage || "No message"}
+                              </div>
                             </div>
-                            <div className="text-xs text-muted-foreground mt-0.5 truncate max-w-[160px] md:max-w-none">
-                              {deployment.commitMessage || "No message"}
+                          </div>
+                          <div className="text-right shrink-0">
+                            <div className="text-xs text-muted-foreground">
+                              {format(new Date(deployment.createdAt), "MMM d, HH:mm")}
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1 px-1.5 py-0.5 bg-secondary/50 rounded inline-block">
+                              {deployment.environment}
                             </div>
                           </div>
                         </div>
-                        <div className="text-right shrink-0">
-                          <div className="text-xs text-muted-foreground">
-                            {format(new Date(deployment.createdAt), "MMM d, HH:mm")}
-                          </div>
-                          <div className="text-xs text-muted-foreground mt-1 px-1.5 py-0.5 bg-secondary/50 rounded inline-block">
-                            {deployment.environment}
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
+                      </Link>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 shrink-0 text-muted-foreground hover:text-red-400 hover:bg-red-500/10"
+                            title="Delete deployment"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete deployment?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will permanently delete deployment <strong>{deployment.commitSha?.substring(0, 7) ?? `#${deployment.id}`}</strong> and all its build logs. This cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() =>
+                                deleteDeployment.mutate({ id: deployment.id }, {
+                                  onSuccess: () => queryClient.invalidateQueries({ queryKey: getListDeploymentsQueryKey(projectId) })
+                                })
+                              }
+                              className="bg-red-600 hover:bg-red-700 text-white"
+                            >
+                              Delete deployment
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   ))}
                 </div>
               ) : (

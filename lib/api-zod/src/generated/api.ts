@@ -169,6 +169,14 @@ export const GetDeploymentResponse = zod.object({
 
 
 /**
+ * @summary Delete a deployment
+ */
+export const DeleteDeploymentParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
  * @summary Cancel a deployment
  */
 export const CancelDeploymentParams = zod.object({
@@ -445,6 +453,166 @@ export const GetDashboardActivityResponseItem = zod.object({
   "timestamp": zod.string()
 })
 export const GetDashboardActivityResponse = zod.array(GetDashboardActivityResponseItem)
+
+
+/**
+ * @summary Platform-wide admin stats
+ */
+export const GetAdminStatsResponse = zod.object({
+  "totalUsers": zod.number(),
+  "activeUsers": zod.number(),
+  "totalProjects": zod.number(),
+  "totalDeployments": zod.number(),
+  "totalDomains": zod.number(),
+  "successRate": zod.number(),
+  "avgBuildDurationMs": zod.number(),
+  "deploymentsToday": zod.number(),
+  "buildMinutesUsed": zod.number(),
+  "storageUsedGb": zod.number()
+})
+
+
+/**
+ * @summary List all users
+ */
+export const ListAdminUsersResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "email": zod.string(),
+  "role": zod.enum(['admin', 'member', 'viewer']),
+  "status": zod.enum(['active', 'suspended', 'pending']),
+  "avatarUrl": zod.string().nullish(),
+  "twoFactorEnabled": zod.boolean(),
+  "lastLoginAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListAdminUsersResponse = zod.array(ListAdminUsersResponseItem)
+
+
+/**
+ * @summary Create a user
+ */
+export const CreateAdminUserBody = zod.object({
+  "name": zod.string(),
+  "email": zod.string(),
+  "role": zod.enum(['admin', 'member', 'viewer']).optional()
+})
+
+
+/**
+ * @summary Update a user
+ */
+export const UpdateAdminUserParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateAdminUserBody = zod.object({
+  "name": zod.string().optional(),
+  "role": zod.enum(['admin', 'member', 'viewer']).optional(),
+  "status": zod.enum(['active', 'suspended', 'pending']).optional()
+})
+
+export const UpdateAdminUserResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "email": zod.string(),
+  "role": zod.enum(['admin', 'member', 'viewer']),
+  "status": zod.enum(['active', 'suspended', 'pending']),
+  "avatarUrl": zod.string().nullish(),
+  "twoFactorEnabled": zod.boolean(),
+  "lastLoginAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a user
+ */
+export const DeleteAdminUserParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List all projects (admin view)
+ */
+export const ListAdminProjectsResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "slug": zod.string(),
+  "framework": zod.string(),
+  "status": zod.string(),
+  "deploymentCount": zod.number(),
+  "productionUrl": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListAdminProjectsResponse = zod.array(ListAdminProjectsResponseItem)
+
+
+/**
+ * @summary List recent deployments (admin view)
+ */
+export const ListAdminDeploymentsResponseItem = zod.object({
+  "id": zod.number(),
+  "projectId": zod.number(),
+  "projectName": zod.string(),
+  "status": zod.string(),
+  "environment": zod.string(),
+  "branch": zod.string(),
+  "commitSha": zod.string().nullish(),
+  "commitMessage": zod.string().nullish(),
+  "buildDurationMs": zod.number().nullish(),
+  "createdAt": zod.string()
+})
+export const ListAdminDeploymentsResponse = zod.array(ListAdminDeploymentsResponseItem)
+
+
+/**
+ * @summary List audit logs
+ */
+export const ListAuditLogsResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number().nullish(),
+  "userEmail": zod.string().nullish(),
+  "action": zod.string(),
+  "resource": zod.string(),
+  "resourceId": zod.string().nullish(),
+  "details": zod.string().nullish(),
+  "ipAddress": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListAuditLogsResponse = zod.array(ListAuditLogsResponseItem)
+
+
+/**
+ * @summary Get system settings
+ */
+export const GetSystemSettingsResponseItem = zod.object({
+  "key": zod.string(),
+  "value": zod.string(),
+  "description": zod.string().nullish(),
+  "updatedAt": zod.string()
+})
+export const GetSystemSettingsResponse = zod.array(GetSystemSettingsResponseItem)
+
+
+/**
+ * @summary Update system settings
+ */
+export const UpdateSystemSettingsBody = zod.object({
+  "settings": zod.array(zod.object({
+  "key": zod.string(),
+  "value": zod.string()
+}))
+})
+
+export const UpdateSystemSettingsResponseItem = zod.object({
+  "key": zod.string(),
+  "value": zod.string(),
+  "description": zod.string().nullish(),
+  "updatedAt": zod.string()
+})
+export const UpdateSystemSettingsResponse = zod.array(UpdateSystemSettingsResponseItem)
 
 
 /**

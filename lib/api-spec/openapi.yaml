@@ -21,6 +21,8 @@ tags:
     description: Environment variables
   - name: dashboard
     description: Dashboard and analytics
+  - name: admin
+    description: Admin panel operations
 paths:
   /healthz:
     get:
@@ -186,6 +188,21 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Deployment"
+
+  /deployments/{id}/delete:
+    delete:
+      operationId: deleteDeployment
+      tags: [deployments]
+      summary: Delete a deployment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
 
   /deployments/{id}/cancel:
     post:
@@ -513,6 +530,168 @@ paths:
                 items:
                   $ref: "#/components/schemas/ActivityItem"
 
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [admin]
+      summary: Platform-wide admin stats
+      responses:
+        "200":
+          description: Admin stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
+  /admin/users:
+    get:
+      operationId: listAdminUsers
+      tags: [admin]
+      summary: List all users
+      responses:
+        "200":
+          description: Users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminUser"
+    post:
+      operationId: createAdminUser
+      tags: [admin]
+      summary: Create a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUserInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+
+  /admin/users/{id}:
+    patch:
+      operationId: updateAdminUser
+      tags: [admin]
+      summary: Update a user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUserUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+    delete:
+      operationId: deleteAdminUser
+      tags: [admin]
+      summary: Delete a user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /admin/projects:
+    get:
+      operationId: listAdminProjects
+      tags: [admin]
+      summary: List all projects (admin view)
+      responses:
+        "200":
+          description: Projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminProject"
+
+  /admin/deployments:
+    get:
+      operationId: listAdminDeployments
+      tags: [admin]
+      summary: List recent deployments (admin view)
+      responses:
+        "200":
+          description: Deployments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminDeployment"
+
+  /admin/audit-logs:
+    get:
+      operationId: listAuditLogs
+      tags: [admin]
+      summary: List audit logs
+      responses:
+        "200":
+          description: Audit logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuditLog"
+
+  /admin/settings:
+    get:
+      operationId: getSystemSettings
+      tags: [admin]
+      summary: Get system settings
+      responses:
+        "200":
+          description: Settings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SystemSetting"
+    patch:
+      operationId: updateSystemSettings
+      tags: [admin]
+      summary: Update system settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SystemSettingsUpdate"
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SystemSetting"
+
   /projects/{projectId}/analytics:
     get:
       operationId: getProjectAnalytics
@@ -829,3 +1008,174 @@ components:
                 type: string
               count:
                 type: integer
+
+    AdminStats:
+      type: object
+      required: [totalUsers, activeUsers, totalProjects, totalDeployments, totalDomains, successRate, avgBuildDurationMs, deploymentsToday, buildMinutesUsed, storageUsedGb]
+      properties:
+        totalUsers:
+          type: integer
+        activeUsers:
+          type: integer
+        totalProjects:
+          type: integer
+        totalDeployments:
+          type: integer
+        totalDomains:
+          type: integer
+        successRate:
+          type: number
+        avgBuildDurationMs:
+          type: integer
+        deploymentsToday:
+          type: integer
+        buildMinutesUsed:
+          type: integer
+        storageUsedGb:
+          type: number
+
+    AdminUser:
+      type: object
+      required: [id, name, email, role, status, twoFactorEnabled, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [admin, member, viewer]
+        status:
+          type: string
+          enum: [active, suspended, pending]
+        avatarUrl:
+          type: ["string", "null"]
+        twoFactorEnabled:
+          type: boolean
+        lastLoginAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    AdminUserInput:
+      type: object
+      required: [name, email]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [admin, member, viewer]
+
+    AdminUserUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+          enum: [admin, member, viewer]
+        status:
+          type: string
+          enum: [active, suspended, pending]
+
+    AdminProject:
+      type: object
+      required: [id, name, slug, framework, status, deploymentCount, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        framework:
+          type: string
+        status:
+          type: string
+        deploymentCount:
+          type: integer
+        productionUrl:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    AdminDeployment:
+      type: object
+      required: [id, projectId, projectName, status, environment, branch, createdAt]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        projectName:
+          type: string
+        status:
+          type: string
+        environment:
+          type: string
+        branch:
+          type: string
+        commitSha:
+          type: ["string", "null"]
+        commitMessage:
+          type: ["string", "null"]
+        buildDurationMs:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+
+    AuditLog:
+      type: object
+      required: [id, action, resource, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: ["integer", "null"]
+        userEmail:
+          type: ["string", "null"]
+        action:
+          type: string
+        resource:
+          type: string
+        resourceId:
+          type: ["string", "null"]
+        details:
+          type: ["string", "null"]
+        ipAddress:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    SystemSetting:
+      type: object
+      required: [key, value, updatedAt]
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+        description:
+          type: ["string", "null"]
+        updatedAt:
+          type: string
+
+    SystemSettingsUpdate:
+      type: object
+      required: [settings]
+      properties:
+        settings:
+          type: array
+          items:
+            type: object
+            required: [key, value]
+            properties:
+              key:
+                type: string
+              value:
+                type: string

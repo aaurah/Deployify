@@ -104,6 +104,16 @@ router.get("/deployments/:id", async (req, res) => {
   res.json(formatDeployment(deployment));
 });
 
+// Delete deployment
+router.delete("/deployments/:id/delete", async (req, res) => {
+  const id = Number(req.params.id);
+  const [deployment] = await db.select().from(deploymentsTable).where(eq(deploymentsTable.id, id));
+  if (!deployment) return res.status(404).json({ error: "Not found" });
+  await db.delete(deploymentLogsTable).where(eq(deploymentLogsTable.deploymentId, id));
+  await db.delete(deploymentsTable).where(eq(deploymentsTable.id, id));
+  res.status(204).send();
+});
+
 // Cancel deployment
 router.post("/deployments/:id/cancel", async (req, res) => {
   const { id } = CancelDeploymentParams.parse({ id: Number(req.params.id) });
