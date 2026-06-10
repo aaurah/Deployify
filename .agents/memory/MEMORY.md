@@ -1,0 +1,2 @@
+- [AI built-in features](ai-builtin.md) — Deployify has its own pattern-based AI engine (no external API needed) for build log analysis and project health scoring.
+- [Deployment simulation](deployment-sim.md) — Simulated builds have realistic log formatting, 15% random failure rate with real error messages, and optional warning scenarios.

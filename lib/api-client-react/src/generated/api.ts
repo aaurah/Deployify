@@ -20,6 +20,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AIAnalysis,
   ActivityItem,
   AdminDeployment,
   AdminProject,
@@ -43,6 +44,7 @@ import type {
   Project,
   ProjectAnalytics,
   ProjectInput,
+  ProjectInsights,
   ProjectUpdate,
   SystemSetting,
   SystemSettingsUpdate
@@ -2863,6 +2865,160 @@ export function useGetProjectAnalytics<TData = Awaited<ReturnType<typeof getProj
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetProjectAnalyticsQueryOptions(projectId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getAnalyzeDeploymentUrl = (id: number,) => {
+
+
+
+
+  return `/api/ai/analyze-deployment/${id}`
+}
+
+/**
+ * @summary AI analysis of a deployment's build logs
+ */
+export const analyzeDeployment = async (id: number, options?: RequestInit): Promise<AIAnalysis> => {
+
+  return customFetch<AIAnalysis>(getAnalyzeDeploymentUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAnalyzeDeploymentQueryKey = (id: number,) => {
+    return [
+    `/api/ai/analyze-deployment/${id}`
+    ] as const;
+    }
+
+
+export const getAnalyzeDeploymentQueryOptions = <TData = Awaited<ReturnType<typeof analyzeDeployment>>, TError = ErrorType<void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof analyzeDeployment>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAnalyzeDeploymentQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof analyzeDeployment>>> = ({ signal }) => analyzeDeployment(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof analyzeDeployment>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type AnalyzeDeploymentQueryResult = NonNullable<Awaited<ReturnType<typeof analyzeDeployment>>>
+export type AnalyzeDeploymentQueryError = ErrorType<void>
+
+
+/**
+ * @summary AI analysis of a deployment's build logs
+ */
+
+export function useAnalyzeDeployment<TData = Awaited<ReturnType<typeof analyzeDeployment>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof analyzeDeployment>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getAnalyzeDeploymentQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetProjectInsightsUrl = (projectId: number,) => {
+
+
+
+
+  return `/api/ai/project-insights/${projectId}`
+}
+
+/**
+ * @summary AI-powered health score and recommendations for a project
+ */
+export const getProjectInsights = async (projectId: number, options?: RequestInit): Promise<ProjectInsights> => {
+
+  return customFetch<ProjectInsights>(getGetProjectInsightsUrl(projectId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetProjectInsightsQueryKey = (projectId: number,) => {
+    return [
+    `/api/ai/project-insights/${projectId}`
+    ] as const;
+    }
+
+
+export const getGetProjectInsightsQueryOptions = <TData = Awaited<ReturnType<typeof getProjectInsights>>, TError = ErrorType<void>>(projectId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProjectInsights>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProjectInsightsQueryKey(projectId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProjectInsights>>> = ({ signal }) => getProjectInsights(projectId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(projectId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProjectInsights>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetProjectInsightsQueryResult = NonNullable<Awaited<ReturnType<typeof getProjectInsights>>>
+export type GetProjectInsightsQueryError = ErrorType<void>
+
+
+/**
+ * @summary AI-powered health score and recommendations for a project
+ */
+
+export function useGetProjectInsights<TData = Awaited<ReturnType<typeof getProjectInsights>>, TError = ErrorType<void>>(
+ projectId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProjectInsights>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetProjectInsightsQueryOptions(projectId,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

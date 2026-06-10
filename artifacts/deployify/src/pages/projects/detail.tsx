@@ -8,6 +8,7 @@ import {
   useCreateEnvVar,
   useDeleteEnvVar,
   useDeleteDeployment,
+  useGetProjectInsights,
   getListDeploymentsQueryKey,
   getListEnvVarsQueryKey
 } from "@workspace/api-client-react";
@@ -16,7 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Play, Github, ExternalLink, Activity, Plus, Key, Eye, EyeOff, Trash, Trash2 } from "lucide-react";
+import { ArrowLeft, Play, Github, ExternalLink, Activity, Plus, Key, Eye, EyeOff, Trash, Trash2, Sparkles, TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle2, Info } from "lucide-react";
 import { format } from "date-fns";
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
 import { Input } from "@/components/ui/input";
@@ -46,6 +47,7 @@ export default function ProjectDetail() {
   const { data: project, isLoading: projectLoading } = useGetProject(projectId, { query: { enabled: !!projectId } });
   const { data: deployments, isLoading: deploymentsLoading } = useListDeployments(projectId, { query: { enabled: !!projectId } });
   const { data: analytics } = useGetProjectAnalytics(projectId, { query: { enabled: !!projectId } });
+  const { data: insights } = useGetProjectInsights(projectId, { query: { enabled: !!projectId } });
   const { data: envVars, isLoading: envVarsLoading } = useListEnvVars(projectId, { query: { enabled: !!projectId } });
   
   const createDeployment = useCreateDeployment();
@@ -182,7 +184,8 @@ export default function ProjectDetail() {
 
         {/* Overview tab */}
         <TabsContent value="overview" className="mt-5 space-y-5">
-          <div className="grid gap-3 grid-cols-2 md:grid-cols-3">
+          {/* Stats + Health score row */}
+          <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
             <Card className="bg-card/50 border-border/50">
               <CardHeader className="pb-2">
                 <CardTitle className="text-xs font-medium text-muted-foreground">Total Deployments</CardTitle>
@@ -201,7 +204,7 @@ export default function ProjectDetail() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-card/50 border-border/50 col-span-2 md:col-span-1">
+            <Card className="bg-card/50 border-border/50">
               <CardHeader className="pb-2">
                 <CardTitle className="text-xs font-medium text-muted-foreground">Avg Build Time</CardTitle>
               </CardHeader>
@@ -211,7 +214,83 @@ export default function ProjectDetail() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* AI Health Score Card */}
+            {insights ? (
+              <Card className={`border-border/50 ${
+                insights.healthScore >= 80 ? "bg-green-500/5 border-green-500/20" :
+                insights.healthScore >= 60 ? "bg-amber-500/5 border-amber-500/20" :
+                "bg-red-500/5 border-red-500/20"
+              }`}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                    <Sparkles className="h-3 w-3 text-indigo-400" />
+                    AI Health
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-2">
+                    <div className={`text-2xl font-bold ${
+                      insights.healthScore >= 80 ? "text-green-400" :
+                      insights.healthScore >= 60 ? "text-amber-400" : "text-red-400"
+                    }`}>
+                      {insights.grade}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {insights.recentTrend === "improving" && <TrendingUp className="h-3.5 w-3.5 text-green-400" />}
+                      {insights.recentTrend === "degrading" && <TrendingDown className="h-3.5 w-3.5 text-red-400" />}
+                      {insights.recentTrend === "stable" && <Minus className="h-3.5 w-3.5 text-muted-foreground" />}
+                      <span className="text-xs text-muted-foreground capitalize">{insights.recentTrend}</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">{insights.healthScore}/100</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="bg-card/50 border-border/50">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                    <Sparkles className="h-3 w-3 text-indigo-400" />
+                    AI Health
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-6 w-12 bg-muted/50 rounded animate-pulse" />
+                </CardContent>
+              </Card>
+            )}
           </div>
+
+          {/* AI Recommendations */}
+          {insights && insights.recommendations.length > 0 && (
+            <Card className="bg-gradient-to-br from-indigo-950/30 to-card/50 border-indigo-500/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-indigo-400" />
+                  AI Insights
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {insights.recommendations.map((rec, i) => (
+                  <div key={i} className={`flex items-start gap-3 p-3 rounded-lg border ${
+                    rec.priority === "high" ? "border-red-500/20 bg-red-500/5" :
+                    rec.priority === "medium" ? "border-amber-500/20 bg-amber-500/5" :
+                    "border-green-500/20 bg-green-500/5"
+                  }`}>
+                    <div className="shrink-0 mt-0.5">
+                      {rec.priority === "high" && <AlertTriangle className="h-3.5 w-3.5 text-red-400" />}
+                      {rec.priority === "medium" && <AlertTriangle className="h-3.5 w-3.5 text-amber-400" />}
+                      {rec.priority === "low" && <CheckCircle2 className="h-3.5 w-3.5 text-green-400" />}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium">{rec.title}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{rec.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
           {analytics?.deploymentsPerDay && analytics.deploymentsPerDay.length > 0 && (
             <Card className="bg-card/50 border-border/50">
@@ -231,7 +310,7 @@ export default function ProjectDetail() {
                       contentStyle={{ backgroundColor: "hsl(var(--card))", borderColor: "hsl(var(--border))", borderRadius: "6px", fontSize: 12 }}
                       labelFormatter={(label) => format(new Date(label), "MMM d, yyyy")}
                     />
-                    <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="count" fill="#6366f1" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>

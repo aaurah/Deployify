@@ -23,6 +23,8 @@ tags:
     description: Dashboard and analytics
   - name: admin
     description: Admin panel operations
+  - name: ai
+    description: Built-in AI analysis and insights
 paths:
   /healthz:
     get:
@@ -711,6 +713,48 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProjectAnalytics"
 
+  /ai/analyze-deployment/{id}:
+    get:
+      operationId: analyzeDeployment
+      tags: [ai]
+      summary: AI analysis of a deployment's build logs
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: AI analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AIAnalysis"
+        "404":
+          description: Deployment not found
+
+  /ai/project-insights/{projectId}:
+    get:
+      operationId: getProjectInsights
+      tags: [ai]
+      summary: AI-powered health score and recommendations for a project
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Project insights
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectInsights"
+        "404":
+          description: Project not found
+
 components:
   schemas:
     HealthStatus:
@@ -1179,3 +1223,84 @@ components:
                 type: string
               value:
                 type: string
+
+    AIIssue:
+      type: object
+      required: [category, title, description, fix]
+      properties:
+        category:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        fix:
+          type: string
+        severity:
+          type: string
+          enum: [error, warning, info]
+
+    AIAnalysis:
+      type: object
+      required: [deploymentId, status, summary, issues, healthScore]
+      properties:
+        deploymentId:
+          type: integer
+        status:
+          type: string
+        summary:
+          type: string
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/AIIssue"
+        healthScore:
+          type: integer
+        buildStages:
+          type: array
+          items:
+            type: object
+            required: [name, status, durationMs]
+            properties:
+              name:
+                type: string
+              status:
+                type: string
+              durationMs:
+                type: integer
+
+    ProjectRecommendation:
+      type: object
+      required: [type, title, description]
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        priority:
+          type: string
+          enum: [high, medium, low]
+
+    ProjectInsights:
+      type: object
+      required: [projectId, healthScore, grade, recommendations, recentTrend]
+      properties:
+        projectId:
+          type: integer
+        healthScore:
+          type: integer
+        grade:
+          type: string
+        recommendations:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProjectRecommendation"
+        recentTrend:
+          type: string
+          enum: [improving, stable, degrading]
+        failureRate:
+          type: number
+        avgBuildMs:
+          type: number

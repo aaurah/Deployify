@@ -635,3 +635,53 @@ export const GetProjectAnalyticsResponse = zod.object({
 })
 
 
+/**
+ * @summary AI analysis of a deployment's build logs
+ */
+export const AnalyzeDeploymentParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AnalyzeDeploymentResponse = zod.object({
+  "deploymentId": zod.number(),
+  "status": zod.string(),
+  "summary": zod.string(),
+  "issues": zod.array(zod.object({
+  "category": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "fix": zod.string(),
+  "severity": zod.enum(['error', 'warning', 'info']).optional()
+})),
+  "healthScore": zod.number(),
+  "buildStages": zod.array(zod.object({
+  "name": zod.string(),
+  "status": zod.string(),
+  "durationMs": zod.number()
+})).optional()
+})
+
+
+/**
+ * @summary AI-powered health score and recommendations for a project
+ */
+export const GetProjectInsightsParams = zod.object({
+  "projectId": zod.coerce.number()
+})
+
+export const GetProjectInsightsResponse = zod.object({
+  "projectId": zod.number(),
+  "healthScore": zod.number(),
+  "grade": zod.string(),
+  "recommendations": zod.array(zod.object({
+  "type": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "priority": zod.enum(['high', 'medium', 'low']).optional()
+})),
+  "recentTrend": zod.enum(['improving', 'stable', 'degrading']),
+  "failureRate": zod.number().optional(),
+  "avgBuildMs": zod.number().optional()
+})
+
+

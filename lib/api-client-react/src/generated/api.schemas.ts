@@ -446,3 +446,70 @@ export interface SystemSettingsUpdate {
   settings: SystemSettingsUpdateSettingsItem[];
 }
 
+export type AIIssueSeverity = typeof AIIssueSeverity[keyof typeof AIIssueSeverity];
+
+
+export const AIIssueSeverity = {
+  error: 'error',
+  warning: 'warning',
+  info: 'info',
+} as const;
+
+export interface AIIssue {
+  category: string;
+  title: string;
+  description: string;
+  fix: string;
+  severity?: AIIssueSeverity;
+}
+
+export type AIAnalysisBuildStagesItem = {
+  name: string;
+  status: string;
+  durationMs: number;
+};
+
+export interface AIAnalysis {
+  deploymentId: number;
+  status: string;
+  summary: string;
+  issues: AIIssue[];
+  healthScore: number;
+  buildStages?: AIAnalysisBuildStagesItem[];
+}
+
+export type ProjectRecommendationPriority = typeof ProjectRecommendationPriority[keyof typeof ProjectRecommendationPriority];
+
+
+export const ProjectRecommendationPriority = {
+  high: 'high',
+  medium: 'medium',
+  low: 'low',
+} as const;
+
+export interface ProjectRecommendation {
+  type: string;
+  title: string;
+  description: string;
+  priority?: ProjectRecommendationPriority;
+}
+
+export type ProjectInsightsRecentTrend = typeof ProjectInsightsRecentTrend[keyof typeof ProjectInsightsRecentTrend];
+
+
+export const ProjectInsightsRecentTrend = {
+  improving: 'improving',
+  stable: 'stable',
+  degrading: 'degrading',
+} as const;
+
+export interface ProjectInsights {
+  projectId: number;
+  healthScore: number;
+  grade: string;
+  recommendations: ProjectRecommendation[];
+  recentTrend: ProjectInsightsRecentTrend;
+  failureRate?: number;
+  avgBuildMs?: number;
+}
+
