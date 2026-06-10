@@ -41,7 +41,7 @@ export default function AdminUsers() {
   });
 
   const onSubmit = (values: z.infer<typeof userSchema>) => {
-    createAdminUser.mutate({ data: { ...values, status: 'active' } }, {
+    createAdminUser.mutate({ data: { ...values } }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListAdminUsersQueryKey() });
         setIsSheetOpen(false);

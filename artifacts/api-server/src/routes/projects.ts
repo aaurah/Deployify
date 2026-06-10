@@ -26,7 +26,7 @@ function formatProject(p: typeof projectsTable.$inferSelect) {
 
 router.get("/projects", async (_req, res) => {
   const projects = await db.select().from(projectsTable).orderBy(desc(projectsTable.createdAt));
-  res.json(projects.map(formatProject));
+  return res.json(projects.map(formatProject));
 });
 
 router.post("/projects", async (req, res) => {
@@ -37,14 +37,14 @@ router.post("/projects", async (req, res) => {
     .insert(projectsTable)
     .values({ ...body, slug, productionUrl, status: "active" })
     .returning();
-  res.status(201).json(formatProject(project));
+  return res.status(201).json(formatProject(project));
 });
 
 router.get("/projects/:id", async (req, res) => {
   const { id } = GetProjectParams.parse({ id: Number(req.params.id) });
   const [project] = await db.select().from(projectsTable).where(eq(projectsTable.id, id));
   if (!project) return res.status(404).json({ error: "Project not found" });
-  res.json(formatProject(project));
+  return res.json(formatProject(project));
 });
 
 router.patch("/projects/:id", async (req, res) => {
@@ -56,13 +56,13 @@ router.patch("/projects/:id", async (req, res) => {
     .where(eq(projectsTable.id, id))
     .returning();
   if (!project) return res.status(404).json({ error: "Project not found" });
-  res.json(formatProject(project));
+  return res.json(formatProject(project));
 });
 
 router.delete("/projects/:id", async (req, res) => {
   const { id } = DeleteProjectParams.parse({ id: Number(req.params.id) });
   await db.delete(projectsTable).where(eq(projectsTable.id, id));
-  res.status(204).send();
+  return res.status(204).send();
 });
 
 export default router;

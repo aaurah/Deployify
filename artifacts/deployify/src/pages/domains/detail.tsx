@@ -28,8 +28,8 @@ export default function DomainDetail() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  const { data: domain, isLoading: domainLoading } = useGetDomain(domainId, { query: { enabled: !!domainId } });
-  const { data: records, isLoading: recordsLoading } = useListDnsRecords(domainId, { query: { enabled: !!domainId } });
+  const { data: domain, isLoading: domainLoading } = useGetDomain(domainId, { query: { queryKey: getGetDomainQueryKey(domainId), enabled: !!domainId } });
+  const { data: records, isLoading: recordsLoading } = useListDnsRecords(domainId, { query: { queryKey: getListDnsRecordsQueryKey(domainId), enabled: !!domainId } });
   
   const verifyDomain = useVerifyDomain();
   const createRecord = useCreateDnsRecord();
@@ -59,7 +59,8 @@ export default function DomainDetail() {
   const handleAddRecord = (e: React.FormEvent) => {
     e.preventDefault();
     createRecord.mutate({
-      data: { domainId, type: recType, name: recName, value: recValue, ttl: 3600 }
+      domainId,
+      data: { type: recType, name: recName, value: recValue, ttl: 3600 }
     }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListDnsRecordsQueryKey(domainId) });
@@ -203,7 +204,7 @@ export default function DomainDetail() {
                             className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
                             onClick={() => {
                               if (confirm("Delete this record?")) {
-                                deleteRecord.mutate({ id: rec.id }, {
+                                deleteRecord.mutate({ domainId, recordId: rec.id }, {
                                   onSuccess: () => queryClient.invalidateQueries({ queryKey: getListDnsRecordsQueryKey(domainId) })
                                 });
                               }

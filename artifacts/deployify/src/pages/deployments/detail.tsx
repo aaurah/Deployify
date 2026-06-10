@@ -7,6 +7,8 @@ import {
   useDeleteDeployment,
   useAnalyzeDeployment,
   getGetDeploymentQueryKey,
+  getGetDeploymentLogsQueryKey,
+  getAnalyzeDeploymentQueryKey,
   getListDeploymentsQueryKey
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -93,7 +95,7 @@ function AIAnalysisCard({ deploymentId }: { deploymentId: number }) {
   const [expanded, setExpanded] = useState<number | null>(null);
 
   const { data: analysis, isLoading } = useAnalyzeDeployment(deploymentId, {
-    query: { enabled }
+    query: { queryKey: getAnalyzeDeploymentQueryKey(deploymentId), enabled }
   });
 
   const severityIcon = (s: string) => {
@@ -222,20 +224,23 @@ export default function DeploymentDetail() {
   
   const { data: deployment, isLoading: deploymentLoading } = useGetDeployment(deploymentId, { 
     query: { 
+      queryKey: getGetDeploymentQueryKey(deploymentId),
       enabled: !!deploymentId,
-      refetchInterval: (data) => {
-        if (data && (data.status === "building" || data.status === "queued")) return 3000;
-        return false;
+      refetchInterval: (query) => {
+        const s = query.state.data?.status;
+        return (s === "building" || s === "queued") ? 3000 : false;
       }
     } 
   });
   
-  const { data: logs, isLoading: logsLoading } = useGetDeploymentLogs(deploymentId, { 
+  const { data: logsRaw, isLoading: logsLoading } = useGetDeploymentLogs(deploymentId, { 
     query: { 
+      queryKey: getGetDeploymentLogsQueryKey(deploymentId),
       enabled: !!deploymentId,
       refetchInterval: deployment?.status === "building" ? 3000 : false
-    } 
+    } as any
   });
+  const logs = logsRaw as import("@workspace/api-client-react").DeploymentLog[] | undefined;
 
   const cancelDeployment = useCancelDeployment();
   const promoteDeployment = usePromoteDeployment();
@@ -413,7 +418,7 @@ export default function DeploymentDetail() {
                   Ready
                 </div>
               )}
-              {(deployment.status === "failed" || deployment.status === "error") && (
+              {deployment.status === "error" && (
                 <div className="flex items-center gap-2 text-xs text-red-400 font-mono">
                   <Ban className="h-3 w-3" />
                   Failed

@@ -89,12 +89,12 @@ router.post("/admin/users", async (req, res) => {
     userEmail: "admin@deployify.app",
   });
 
-  res.status(201).json(formatUser(user));
+  return res.status(201).json(formatUser(user));
 });
 
 router.patch("/admin/users/:id", async (req, res) => {
   const { id } = UpdateAdminUserParams.parse({ id: Number(req.params.id) });
-  const body = AdminUserUpdateBody.parse(req.body);
+  const body = UpdateAdminUserBody.parse(req.body);
 
   const [user] = await db
     .update(usersTable)
@@ -112,7 +112,7 @@ router.patch("/admin/users/:id", async (req, res) => {
     userEmail: "admin@deployify.app",
   });
 
-  res.json(formatUser(user));
+  return res.json(formatUser(user));
 });
 
 router.delete("/admin/users/:id", async (req, res) => {
@@ -129,7 +129,7 @@ router.delete("/admin/users/:id", async (req, res) => {
     userEmail: "admin@deployify.app",
   });
 
-  res.status(204).send();
+  return res.status(204).send();
 });
 
 // ── All Projects ─────────────────────────────────────────────────────────────

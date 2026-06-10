@@ -53,7 +53,7 @@ router.post("/domains", async (req, res) => {
     { domainId: domain.id, type: "CNAME", name: "www", value: domain.name, ttl: 3600 },
   ]);
 
-  res.status(201).json(formatDomain(domain));
+  return res.status(201).json(formatDomain(domain));
 });
 
 // Get domain
@@ -61,14 +61,14 @@ router.get("/domains/:id", async (req, res) => {
   const { id } = GetDomainParams.parse({ id: Number(req.params.id) });
   const [domain] = await db.select().from(domainsTable).where(eq(domainsTable.id, id));
   if (!domain) return res.status(404).json({ error: "Not found" });
-  res.json(formatDomain(domain));
+  return res.json(formatDomain(domain));
 });
 
 // Delete domain
 router.delete("/domains/:id", async (req, res) => {
   const { id } = DeleteDomainParams.parse({ id: Number(req.params.id) });
   await db.delete(domainsTable).where(eq(domainsTable.id, id));
-  res.status(204).send();
+  return res.status(204).send();
 });
 
 // Verify domain
@@ -80,14 +80,14 @@ router.post("/domains/:id/verify", async (req, res) => {
     .where(eq(domainsTable.id, id))
     .returning();
   if (!domain) return res.status(404).json({ error: "Not found" });
-  res.json(formatDomain(domain));
+  return res.json(formatDomain(domain));
 });
 
 // List DNS records
 router.get("/domains/:domainId/records", async (req, res) => {
   const { domainId } = ListDnsRecordsParams.parse({ domainId: Number(req.params.domainId) });
   const records = await db.select().from(dnsRecordsTable).where(eq(dnsRecordsTable.domainId, domainId));
-  res.json(records.map(formatDnsRecord));
+  return res.json(records.map(formatDnsRecord));
 });
 
 // Create DNS record
@@ -98,7 +98,7 @@ router.post("/domains/:domainId/records", async (req, res) => {
     .insert(dnsRecordsTable)
     .values({ domainId, ...body, ttl: body.ttl ?? 3600 })
     .returning();
-  res.status(201).json(formatDnsRecord(record));
+  return res.status(201).json(formatDnsRecord(record));
 });
 
 // Update DNS record
@@ -114,7 +114,7 @@ router.patch("/domains/:domainId/records/:recordId", async (req, res) => {
     .where(eq(dnsRecordsTable.id, recordId))
     .returning();
   if (!record) return res.status(404).json({ error: "Not found" });
-  res.json(formatDnsRecord(record));
+  return res.json(formatDnsRecord(record));
 });
 
 // Delete DNS record
@@ -124,7 +124,7 @@ router.delete("/domains/:domainId/records/:recordId", async (req, res) => {
     recordId: Number(req.params.recordId),
   });
   await db.delete(dnsRecordsTable).where(eq(dnsRecordsTable.id, recordId));
-  res.status(204).send();
+  return res.status(204).send();
 });
 
 export default router;

@@ -273,7 +273,7 @@ router.get("/ai/analyze-deployment/:id", async (req, res) => {
   const summary = generateSummary(deployment.status, issues, deployment.buildDurationMs);
   const healthScore = computeHealthScore(deployment.status, issues);
 
-  res.json({
+  return res.json({
     deploymentId: id,
     status: deployment.status,
     summary,
@@ -301,7 +301,7 @@ router.get("/ai/project-insights/:projectId", async (req, res) => {
   const olderDeployments = allDeployments.filter((d) => d.createdAt < sevenDaysAgo);
 
   const total = allDeployments.length;
-  const failed = allDeployments.filter((d) => d.status === "failed" || d.status === "error").length;
+  const failed = allDeployments.filter((d) => d.status === "error").length;
   const successful = allDeployments.filter((d) => d.status === "ready").length;
   const failureRate = total > 0 ? failed / total : 0;
 
@@ -312,10 +312,10 @@ router.get("/ai/project-insights/:projectId", async (req, res) => {
       : 0;
 
   const recentFailed = recentDeployments.filter(
-    (d) => d.status === "failed" || d.status === "error"
+    (d) => d.status === "error"
   ).length;
   const olderFailed = olderDeployments.filter(
-    (d) => d.status === "failed" || d.status === "error"
+    (d) => d.status === "error"
   ).length;
   const recentRate = recentDeployments.length > 0 ? recentFailed / recentDeployments.length : 0;
   const olderRate = olderDeployments.length > 0 ? olderFailed / olderDeployments.length : 0;
@@ -409,7 +409,7 @@ router.get("/ai/project-insights/:projectId", async (req, res) => {
     });
   }
 
-  res.json({
+  return res.json({
     projectId,
     healthScore,
     grade,

@@ -154,7 +154,7 @@ router.get("/deployments/:id", async (req, res) => {
   const { id } = GetDeploymentParams.parse({ id: Number(req.params.id) });
   const [deployment] = await db.select().from(deploymentsTable).where(eq(deploymentsTable.id, id));
   if (!deployment) return res.status(404).json({ error: "Not found" });
-  res.json(formatDeployment(deployment));
+  return res.json(formatDeployment(deployment));
 });
 
 // Delete deployment
@@ -164,7 +164,7 @@ router.delete("/deployments/:id/delete", async (req, res) => {
   if (!deployment) return res.status(404).json({ error: "Not found" });
   await db.delete(deploymentLogsTable).where(eq(deploymentLogsTable.deploymentId, id));
   await db.delete(deploymentsTable).where(eq(deploymentsTable.id, id));
-  res.status(204).send();
+  return res.status(204).send();
 });
 
 // Cancel deployment
@@ -176,7 +176,7 @@ router.post("/deployments/:id/cancel", async (req, res) => {
     .where(eq(deploymentsTable.id, id))
     .returning();
   if (!deployment) return res.status(404).json({ error: "Not found" });
-  res.json(formatDeployment(deployment));
+  return res.json(formatDeployment(deployment));
 });
 
 // Promote to production
@@ -188,7 +188,7 @@ router.post("/deployments/:id/promote", async (req, res) => {
     .where(eq(deploymentsTable.id, id))
     .returning();
   if (!deployment) return res.status(404).json({ error: "Not found" });
-  res.json(formatDeployment(deployment));
+  return res.json(formatDeployment(deployment));
 });
 
 // Get deployment logs
@@ -199,7 +199,7 @@ router.get("/deployments/:id/logs", async (req, res) => {
     .from(deploymentLogsTable)
     .where(eq(deploymentLogsTable.deploymentId, id))
     .orderBy(deploymentLogsTable.timestamp);
-  res.json(logs.map(formatLog));
+  return res.json(logs.map(formatLog));
 });
 
 export default router;

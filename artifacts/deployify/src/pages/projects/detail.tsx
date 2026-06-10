@@ -9,7 +9,10 @@ import {
   useDeleteEnvVar,
   useDeleteDeployment,
   useGetProjectInsights,
+  getGetProjectQueryKey,
   getListDeploymentsQueryKey,
+  getGetProjectAnalyticsQueryKey,
+  getGetProjectInsightsQueryKey,
   getListEnvVarsQueryKey
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -34,6 +37,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 type DeploymentInputEnvironment = "production" | "preview" | "development";
 type EnvVarInputEnvironment = "production" | "preview" | "development" | "all";
@@ -44,11 +48,11 @@ export default function ProjectDetail() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   
-  const { data: project, isLoading: projectLoading } = useGetProject(projectId, { query: { enabled: !!projectId } });
-  const { data: deployments, isLoading: deploymentsLoading } = useListDeployments(projectId, { query: { enabled: !!projectId } });
-  const { data: analytics } = useGetProjectAnalytics(projectId, { query: { enabled: !!projectId } });
-  const { data: insights } = useGetProjectInsights(projectId, { query: { enabled: !!projectId } });
-  const { data: envVars, isLoading: envVarsLoading } = useListEnvVars(projectId, { query: { enabled: !!projectId } });
+  const { data: project, isLoading: projectLoading } = useGetProject(projectId, { query: { queryKey: getGetProjectQueryKey(projectId), enabled: !!projectId } });
+  const { data: deployments, isLoading: deploymentsLoading } = useListDeployments(projectId, { query: { queryKey: getListDeploymentsQueryKey(projectId), enabled: !!projectId } });
+  const { data: analytics } = useGetProjectAnalytics(projectId, { query: { queryKey: getGetProjectAnalyticsQueryKey(projectId), enabled: !!projectId } });
+  const { data: insights } = useGetProjectInsights(projectId, { query: { queryKey: getGetProjectInsightsQueryKey(projectId), enabled: !!projectId } });
+  const { data: envVars, isLoading: envVarsLoading } = useListEnvVars(projectId, { query: { queryKey: getListEnvVarsQueryKey(projectId), enabled: !!projectId } });
   
   const createDeployment = useCreateDeployment();
   const createEnvVar = useCreateEnvVar();
@@ -87,7 +91,8 @@ export default function ProjectDetail() {
   const handleCreateEnvVar = (e: React.FormEvent) => {
     e.preventDefault();
     createEnvVar.mutate({
-      data: { key: envKey, value: envValue, environment: envEnv, projectId }
+      projectId,
+      data: { key: envKey, value: envValue, environment: envEnv }
     }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListEnvVarsQueryKey(projectId) });
@@ -461,7 +466,7 @@ export default function ProjectDetail() {
                       <Button
                         variant="ghost" size="icon"
                         className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
-                        onClick={() => deleteEnvVar.mutate({ id: env.id }, {
+                        onClick={() => deleteEnvVar.mutate({ projectId, envId: env.id }, {
                           onSuccess: () => queryClient.invalidateQueries({ queryKey: getListEnvVarsQueryKey(projectId) })
                         })}>
                         <Trash className="h-3.5 w-3.5" />
